@@ -7,7 +7,7 @@
 var app = require('../app');
 var debug = require('debug')('test:server');
 var http = require('http');
-
+var fs = require('fs');
 
 
 /**
@@ -23,7 +23,7 @@ app.set('port', port);
 
 var server = http.createServer(app);
 var io = require('socket.io')(server);
-console.log(io);
+//console.log(io);
 /**
  * Listen on provided port, on all network interfaces.
  */
@@ -37,19 +37,19 @@ server.on('listening', onListening);
  */
 
 function normalizePort(val) {
-  var port = parseInt(val, 10);
+    var port = parseInt(val, 10);
 
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
+    if (isNaN(port)) {
+        // named pipe
+        return val;
+    }
 
-  if (port >= 0) {
-    // port number
-    return port;
-  }
+    if (port >= 0) {
+        // port number
+        return port;
+    }
 
-  return false;
+    return false;
 }
 
 /**
@@ -57,27 +57,27 @@ function normalizePort(val) {
  */
 
 function onError(error) {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+    var bind = typeof port === 'string'
+        ? 'Pipe ' + port
+        : 'Port ' + port;
 
-  // handle specific listen errors with friendly messages
-  switch (error.code) {
-    case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
-      process.exit(1);
-      break;
-    case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
-      process.exit(1);
-      break;
-    default:
-      throw error;
-  }
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
 }
 
 /**
@@ -85,9 +85,76 @@ function onError(error) {
  */
 
 function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
+    var addr = server.address();
+    var bind = typeof addr === 'string'
+        ? 'pipe ' + addr
+        : 'port ' + addr.port;
+    debug('Listening on ' + bind);
+    console.log('Listening on ' + bind);
 }
+
+
+/*
+ * Custom code starts here
+ */
+var dataFile = "";
+var cluster2dpoints = require('./cluster2dpoints.js');
+var view;
+
+function getInitData() {
+    return "0.5 0.5"
+}
+
+function userOperation(op) {
+    return "0.5 0.5"
+}
+
+io.on('connection', function (socket) {
+    socket.on('state', function (msg) {
+        console.log("Recieved state from client " + msg);
+        if (dataFile != "") {
+            if (msg == "0") {
+                io.emit('newData', getInitData());
+            } else {
+                io.emit('newData', userOperation(msg));
+            }
+        }
+
+    });
+
+    socket.on('getDataFiles', function () {
+        console.log("Recieved data files name list request from client ");
+        var dataFileNames = fs.readdirSync("../data").join(" ");
+        console.log(dataFileNames);
+        io.emit('dataFiles', dataFileNames);
+    })
+
+    socket.on('selectDataFile', function (fileName) {
+
+        console.log("File selected: " + fileName);
+
+        var clusteredData = "";
+        fs.readFile('../data/' + fileName, function (err, data) {
+            var clusteredData;
+            cluster2dpoints.cluster2dpoints(data, function(res){
+                clusteredData = res;
+                console.log("clustered data: " +JSON.stringify(clusteredData) );
+                view =cluster2dpoints.getView(clusteredData[0],1);
+                console.log("view "+ view);
+                socket.emit("InitData",view);
+            });
+
+        });
+    })
+
+    socket.on('getNetDImage', function () {
+        fs.readFileSync('../public/images/902kb.jpg', function (err, buf) {
+            socket.emit('NetDImage', {image: buf});
+            console.log("Emmited image file");
+        });
+    })
+
+
+});
+
+

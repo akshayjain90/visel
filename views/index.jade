@@ -1,5 +1,25 @@
+//
+   Created by Akshay on 4/19/2015.
 extends layout
-
 block content
-  h1= title
-  p Welcome to #{title}
+    h1= title
+    //p Welcome to #{title}
+    //ul#messages
+    //form(action="")
+    //  input#m(autocomplete="off")
+    //  button Send
+    table#table
+        tr
+            td(width = 300, height =1000)
+                div#options
+            td
+                canvas#canvas1
+        tr
+            td(colspan="2")
+                canvas#networkData
+        tr
+            td(colspan="2")
+                canvas#dataOnClient
+        tr
+            td(colspan="2")
+                canvas#processorUsed
