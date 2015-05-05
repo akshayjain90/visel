@@ -99,7 +99,12 @@ function onListening() {
  */
 var dataFile = "";
 var cluster2dpoints = require('./cluster2dpoints.js');
-var view;
+var props = require('./props.js').props;
+var view={};
+var clientLevel = 1;
+var clientCenterX =0;
+var clientCenterY =0;
+var clusteredData;
 
 function getInitData() {
     return "0.5 0.5"
@@ -110,16 +115,31 @@ function userOperation(op) {
 }
 
 io.on('connection', function (socket) {
+
     socket.on('state', function (msg) {
         console.log("Recieved state from client " + msg);
-        if (dataFile != "") {
-            if (msg == "0") {
-                io.emit('newData', getInitData());
-            } else {
-                io.emit('newData', userOperation(msg));
+        if (clusteredData && clusteredData.length >0) {
+            for(var i=1;i<msg.zoom +3;i++){
+                view.level = i;
+                //view.data = clusteredData[i];
+                view.data = cluster2dpoints.getView(clusteredData[0], i);
+                console.log("viewwwww " + view);
+                io.emit('newData',view);
             }
         }
+    });
 
+    socket.on('getParameters', function () {
+        socket.emit('parameters', sendParameters());
+    })
+
+    function sendParameters() {
+        return props;
+    };
+
+    socket.on('updateParameters', function (msg) {
+        props = msg;
+        sendPresentView();
     });
 
     socket.on('getDataFiles', function () {
@@ -129,23 +149,42 @@ io.on('connection', function (socket) {
         io.emit('dataFiles', dataFileNames);
     })
 
-    socket.on('selectDataFile', function (fileName) {
-
-        console.log("File selected: " + fileName);
-
-        var clusteredData = "";
+    function sendInitData(fileName) {
+        dataFile = fileName;
         fs.readFile('../data/' + fileName, function (err, data) {
-            var clusteredData;
-            cluster2dpoints.cluster2dpoints(data, function(res){
-                clusteredData = res;
-                console.log("clustered data: " +JSON.stringify(clusteredData) );
-                view =cluster2dpoints.getView(clusteredData[0],1);
-                console.log("view "+ view);
-                socket.emit("InitData",view);
-            });
 
+            cluster2dpoints.cluster2dpoints(data, props, function (res) {
+                clusteredData = res;
+                //console.log("clustered data: " + JSON.stringify(clusteredData));
+                view.data = cluster2dpoints.getView(clusteredData[0], 1);
+
+                //console.log("view " + view);
+                socket.emit("InitData", view);
+            });
         });
+    }
+
+    //Needs lot of changes
+    function sendPresentView() {
+
+        fileName = dataFile;
+        fs.readFile('../data/' + fileName, function (err, data) {
+
+            cluster2dpoints.cluster2dpoints(data, props, function (res) {
+                clusteredData = res;
+                //console.log("clustered data: " + JSON.stringify(clusteredData));
+                view.data = cluster2dpoints.getView(clusteredData[0], 1);
+                //console.log("view " + view);
+                socket.emit("InitData", view);
+            });
+        });
+    }
+
+    socket.on('selectDataFile', function (fileName) {
+        console.log("File selected: " + fileName);
+        sendInitData(fileName);
     })
+
 
     socket.on('getNetDImage', function () {
         fs.readFileSync('../public/images/902kb.jpg', function (err, buf) {

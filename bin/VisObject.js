@@ -13,7 +13,7 @@ exports.VisPoint = {
     'lLevelId': 0,
     'color': props.pointColor,
     'attributes': {},
-    'size' :1
+    'size': 1
 }
 
 exports.VisCluster = {
