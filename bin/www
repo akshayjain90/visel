@@ -9,7 +9,7 @@ var debug = require('debug')('test:server');
 var http = require('http');
 var fs = require('fs');
 
-var dataDirectory = __dirname.split('visel')[0] + 'visel/data';
+var dataDirectory = __dirname.split('visel')[0] + 'visel/data/';
 
 /**
  * Get port from environment and store in Express.
@@ -254,7 +254,7 @@ io.on('connection', function (socket) {
 
 
     socket.on('getNetDImage', function () {
-	    var publicDirectory = __dirname.split('visel')[0] + '/visel/public';
+	    var publicDirectory = __dirname.split('visel')[0] + 'visel/public';
         fs.readFileSync(publicDirectory + '/images/902kb.jpg', function (err, buf) {
             socket.emit('NetDImage', {image: buf});
             console.log("Emmited image file");
