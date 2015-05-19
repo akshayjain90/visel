@@ -100,12 +100,15 @@ function onListening() {
 var dataFile = "";
 var cluster2dpoints = require('./cluster2dpoints.js');
 var props = require('./props.js').props;
-var view={};
+var view={version:0};
+
 var clientLevel = 1;
 var clientCenterX =0;
 var clientCenterY =0;
+var allData;
 var clusteredData;
-
+var version =0;
+var done =0;
 function getInitData() {
     return "0.5 0.5"
 }
@@ -117,16 +120,67 @@ function userOperation(op) {
 io.on('connection', function (socket) {
 
     socket.on('state', function (msg) {
-        console.log("Recieved state from client " + msg);
-        if (clusteredData && clusteredData.length >0) {
-            for(var i=1;i<msg.zoom +3;i++){
-                view.level = i;
-                //view.data = clusteredData[i];
-                view.data = cluster2dpoints.getView(clusteredData[0], i);
-                console.log("viewwwww " + view);
-                io.emit('newData',view);
+
+            view.version += 1;
+            console.log("Recieved state from client " + JSON.stringify(msg));
+            if (clusteredData && clusteredData.length > 0) {
+
+
+                var levelsOnClient = msg.levelsOnClient;
+                var i = -1;
+                for (var j = 1; j <= msg.zoom + 2; j++) {
+                    if (levelsOnClient.indexOf(j) == -1) {
+                        i = j - 1;
+                        break;
+                    }
+                }
+
+                if (i != -1 && (done ==0 || i<=done)) {
+                    var pointList = [];
+                    console.log(clusteredData[i - 1].length);
+                    for (var j = 0; j < clusteredData[i - 1].length; j++) {
+                        if (clusteredData[i - 1][j].size > 1) {
+                            pointList = pointList.concat(allData.filter(function (value, index) {
+                                if (clusteredData[i - 1][j].lLevelIdList.indexOf(value.id) > -1)
+                                    return true;
+                                else
+                                    return false;
+                            }));
+
+                        }
+                    }
+
+
+                    //console.log("alldata length " +allData.length);
+
+                    console.log("pointlist length " + pointList.length + "props " + JSON.stringify(props));
+                    cluster2dpoints.cluster2dpoints(pointList, props, i + 1, function (res) {
+                        console.log(" result length " + res[0].length);
+                        if (res[0].length > 0) {
+
+                            clusteredData[i] = res[0];
+                            cluster2dpoints.getView(clusteredData[i], 1, [msg.xDisp, msg.yDisp], function (res) {
+                                var newView={};
+                                newView.version = view.version;
+                                newView.level = i + 1;
+                                newView.data = res;
+                                //console.log("viewwwww " + JSON.stringify(view));
+                                //console.log("level " + view.level + " size " + clusteredData[i].length);
+                                io.emit('newData', newView);
+                            });
+                        }
+
+                        if(clusteredData[i].filter(function (value){
+                            if(value.size>1)
+                                return true;
+                            return false;
+                        }) ==0)
+                            done =i;
+                    });
+                }
+
             }
-        }
+
     });
 
     socket.on('getParameters', function () {
@@ -152,15 +206,21 @@ io.on('connection', function (socket) {
     function sendInitData(fileName) {
         dataFile = fileName;
         fs.readFile('../data/' + fileName, function (err, data) {
+            cluster2dpoints.getAllData(data, props, function(res){
+                allData = res;
+                cluster2dpoints.cluster2dpoints(allData, props, 1, function (res) {
+                    clusteredData = res;
+                    //console.log("clustered data: " + JSON.stringify(clusteredData));
+                    cluster2dpoints.getView(clusteredData[0], 1, [500,500],function(res){
+                        view.data = res;
+                        view.coordRanges = cluster2dpoints.getCoordRanges();
+                        //console.log("view " + view);
+                        socket.emit("InitData", view);
+                    });
 
-            cluster2dpoints.cluster2dpoints(data, props, function (res) {
-                clusteredData = res;
-                //console.log("clustered data: " + JSON.stringify(clusteredData));
-                view.data = cluster2dpoints.getView(clusteredData[0], 1);
+                });
+            })
 
-                //console.log("view " + view);
-                socket.emit("InitData", view);
-            });
         });
     }
 
@@ -169,14 +229,21 @@ io.on('connection', function (socket) {
 
         fileName = dataFile;
         fs.readFile('../data/' + fileName, function (err, data) {
+            cluster2dpoints.getAllData(data, props, function(res){
+                allData = res;
+                cluster2dpoints.cluster2dpoints(allData, props, 1, function (res) {
+                    clusteredData = res;
+                    //console.log("clustered data: " + JSON.stringify(clusteredData));
+                    cluster2dpoints.getView(clusteredData[0], 1, [500,500],function(res){
+                        view.data = res;
+                        view.coordRanges = cluster2dpoints.getCoordRanges();
+                        //console.log("view " + view);
+                        socket.emit("InitData", view);
+                    });
 
-            cluster2dpoints.cluster2dpoints(data, props, function (res) {
-                clusteredData = res;
-                //console.log("clustered data: " + JSON.stringify(clusteredData));
-                view.data = cluster2dpoints.getView(clusteredData[0], 1);
-                //console.log("view " + view);
-                socket.emit("InitData", view);
-            });
+                });
+            })
+
         });
     }
 

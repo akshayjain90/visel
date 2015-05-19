@@ -16,5 +16,5 @@ exports.props = {
     'maxCentroidsPerView': 100,
     'dirty': 0,
     'clusteringScaledRadius': 20,
-    'clusteringNumOfPointsThreshold': 20
+    'clusteringNumOfPointsThreshold': 50
 }

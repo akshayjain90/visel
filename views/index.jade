@@ -1,29 +1,67 @@
-//
-   Created by Akshay on 4/19/2015.
+
 extends layout
 block content
+    div
+        p
+            span.
+                0. Select a data file and load the data.
+        p
+            span.
+                1. Scroll slowly over the canvas to zoom.
+        p
+            span.
+                2. Click and drag to pan.
+        p
+            span.
+                3. Use Select/Pan button to select points
+                on click and drag
+
     div(style="text-align: center;")
         h1=title
         h2=title2
+        br
+        br
+    table#table2(cellpadding="10")
+        tr
+            td(width = 100, height =50)
+                div#options21
+            td(width = 100, height =50)
+                div#options22
+            td(width = 100, height =50)
+                div#options23
+            td(width = 100, height =50)
+                div#options24
+            td(width = 100, height =50)
+                div#options25
+            td(width = 100, height =50)
+                div#options26
+            td(width = 100, height =50)
+                div#options27
+            td(width = 100, height =50)
+                div#options28
+            td(width = 100, height =50)
+                div#options29
 
     table#table(cellpadding="10")
         tr(style="vertical-align: top;")
             td(width = 200, height =1000)
-                h3="Options"
+                div#leftTop
                 div#options
             td(width = 1080, height =1080)
                 div#workspace
                     canvas#canvas1
             td(width = 200, height =1000)
+                div#options2
+            td(width = 200, height =1000, hidden=true)
                 div#mousePos
                 h3="Vizualization Parameters"
                 div#parameters
         tr
-            td(colspan="3")
+            td(colspan="4")
                 canvas#networkData
         tr
-            td(colspan="3")
+            td(colspan="4")
                 canvas#dataOnClient
         tr
-            td(colspan="3")
+            td(colspan="4")
                 canvas#processorUsed
