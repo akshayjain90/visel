@@ -4,8 +4,8 @@
 
 
 exports.props = {
-    'pointColor': 'Red',
-    'clusterColor': 'Blue',
+    'pointColor': 'FA0000',
+    'clusterColor': 'FA0000',
     'pointRadius': 1,
     'minClusterRadius': 5,
     'center': [0, 0],

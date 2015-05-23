@@ -1,20 +1,69 @@
 
 extends layout
 block content
-    div
-        p
-            span.
-                0. Select a data file and load the data.
-        p
-            span.
-                1. Scroll slowly over the canvas to zoom.
-        p
-            span.
-                2. Click and drag to pan.
-        p
-            span.
-                3. Use Select/Pan button to select points
-                on click and drag
+    table(width="100%")
+        tr
+            td
+                div#instructions(style="text-align: left;")
+                    button(type = "button", class = "btn btn-primary", data-toggle="popover", title="Instructions for using Visliu",
+                        , data-html="true", data-content="\x3Cb >1.\x3C/b > Select a data file and click on 'Load Data'." +
+                        "\x3Cbr />\x3Cbr /> \x3Cb >2.\x3C/b > To zoom, either" +
+                        "\x3Cbr />......\x3Cb >a.\x3C/b > Keep the mouse over the canvas and scroll using a mouse or " +
+                        "       a two finger vertical swipe on a touchpad, or " +
+                        "\x3Cbr />......\x3Cb >b.\x3C/b > Keep the mouse over the canvas and press \x3Cb >E\x3C/b > to zoom in or \x3Cb >D\x3C/b > to zoom out." +
+                        "\x3Cbr />\x3Cbr />\x3Cb >3.\x3C/b > To Pan, either" +
+                        "\x3Cbr />......\x3Cb >a.\x3C/b > Mouse down anywhere on the canvas and drag, or" +
+                        "\x3Cbr />......\x3Cb >b.\x3C/b > Use \x3Cb >A\x3C/b > to pan left, \x3Cb >W\x3C/b > to pan up, \x3Cb >Z\x3C/b > to pan down and \x3Cb >S\x3C/b > to pan right" +
+                        "\x3Cbr />\x3Cbr />\x3Cb >4.\x3C/b > To perform operations on data, first click the Pan/Select switch in the header menu to Select state " +
+                        "and then do mouse down and drag. The selected objects will get highlighted. Multiple selects get added to the " +
+                        "same selection until the Cancel Selection button in the header menu is pressed." +
+                        "\x3Cbr />\x3Cbr />\x3Cb >5.\x3C/b > To change global visualization configuration, use the Configuration button on top right.").
+                            Instructions
+
+            td
+                div#configureVis(style="text-align: right;")
+                    button(type="button", class="btn btn-primary" data-toggle="modal" data-target="#myModal").
+                        Configuration
+
+                    div#myModal(class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true")
+                        div(class="modal-dialog")
+                            div(class="modal-content")
+                                div(class="modal-header")
+                                    button( type="button" class="close" data-dismiss="modal" aria-label="Close")
+                                        span( aria-hidden="true").
+                                            &times;
+                                    h4(class="modal-title" id="myModalLabel" style="text-align: left;").
+                                        Change Global Configuration
+
+                                div.modal-body
+                                    div.input-group
+                                        span.input-group-addon#basic-addon1.
+                                            Default point color
+                                        input(id="defptcolor" type="text" class="form-control color" placeholder="" aria-describedby="basic-addon1")
+                                    br
+                                    br
+                                    div.input-group
+                                        span.input-group-addon#basic-addon1.
+                                            Default cluster color
+                                        input(id="defclstrcolor" type="text" class="form-control color" placeholder="" aria-describedby="basic-addon1")
+                                    br
+                                    br
+                                    div.input-group
+                                        span.input-group-addon#basic-addon1.
+                                            Threshold Point Density
+                                        input(id="thptden" type="text" class="form-control" placeholder="" aria-describedby="basic-addon1")
+                                    br
+                                    br
+                                    div.input-group
+                                        span.input-group-addon#basic-addon1.
+                                            Maximum Clusters Per Level
+                                        input(id="maxcluspl" type="text" class="form-control" placeholder="" aria-describedby="basic-addon1")
+
+                                div.modal-footer
+                                    button(type="button" class="btn btn-default" data-dismiss="modal").
+                                        Close
+                                    button(type="button" id="updateParamButton" class="btn btn-primary").
+                                        Save changes
 
     div(style="text-align: center;")
         h1=title

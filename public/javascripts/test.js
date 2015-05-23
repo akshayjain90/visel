@@ -19,6 +19,9 @@ $(function () {
     var space = false;
     var zoomBy = 10;
 
+    var presentX =0;
+    var presentY =0;
+
     function setEmpty(){
         var v=[];
         for(var i=0; i<100;i++){
@@ -37,6 +40,20 @@ $(function () {
     var clientVersion =0;
     var serverVersion =0;
 
+    //Initialize Instructions
+    $('[data-toggle="popover"]').tooltip({'html': 'true'});
+    $('[data-toggle="popover"]').popover();
+
+    var paramObject = {'defptcolor':'FA0000',
+                       'defclstrcolor':'FA0000',
+                       'thptden':50,
+                       'maxcluspl':100,
+                       'defptcolorR':0,
+                       'defptcolorB':0,
+                       'defptcolorG':0,
+                       'defclstrcolorR':0,
+                       'defclstrcolorB':0,
+                       'defclstrcolorG':0};
     function fillOptions2(){
 
         //$('#options21').append($("<p />", {"text": "Upload a new data file:"}));
@@ -73,12 +90,11 @@ $(function () {
         })
 
         $('#options29').append($("<button />", {"id": "cancelSelection", "text": "Cancel Selection",
-            "value": "Cancel selection","class":"btn btn-default"}));
+            "value": "Cancel selection","class":"btn btn-danger"}));
 
 
     }
     fillOptions2();
-
 
     function fillOptions() {
         socket.emit('getDataFiles');
@@ -87,7 +103,7 @@ $(function () {
         options.append($("<p />", {"text": "Select a data file"}));
         options.append($("<select />", {"id": "fileSelect","class":"form-control"}));
         options.append($("<br />"));
-        options.append($("<button />", {"id": "loadData", "text": "Load Data", "value": "Load Data","class":"btn btn-default"}));
+        options.append($("<button />", {"id": "loadData", "text": "Load Data", "value": "Load Data","class":"btn btn-success"}));
 
         socket.on('dataFiles', function (msg) {
             var fileNameList = msg.split(" ");
@@ -112,14 +128,6 @@ $(function () {
         options.append($("<br />"));
         options.append($("<br />"));
 
-
-        //options.append($("<p />", {"text": "Select points by id list:"}));
-        //options.append($("<input />", {"id": "selectPointsById", "type": "text", value: ""}));
-        //options.append($("<button />", {"id": "makeSelection", "text": "Make Selection", "value": "Make selection"}));
-
-
-
-
         options.append($("<br />"));
         options.append($("<p />", {"text": "Select one or more points to perform these operations :"}));
         options.append($("<br />"));
@@ -135,7 +143,7 @@ $(function () {
         operations.append($("<input />", {"id": "transX", "type": "text", placeholder: "x translation","class":"form-control"}));
         operations.append($("<input />", {"id": "transY", "type": "text", placeholder: "y translation","class":"form-control"}));
         operations.append($("<br />"));
-        operations.append($("<button />", {"id": "translate", "text": "Translate", "value": "Translate","class":"btn btn-default"}));
+        operations.append($("<button />", {"id": "translate", "text": "Translate", "value": "Translate","class":"btn btn-success"}));
 
         operations.append($("<br />"));
         operations.append($("<br />"));
@@ -149,7 +157,7 @@ $(function () {
         operations.append($("<br />"));
         operations.append($("<br />"));
         operations.append($("<p />", {"text": "Delete Points :", 'id':'dpp'}));
-        operations.append($("<button />", {"id": "deletePoints", "text": "Delete", "value": "Delete","class":"btn btn-default"}));
+        operations.append($("<button />", {"id": "deletePoints", "text": "Delete", "value": "Delete","class":"btn btn-success"}));
 
         operations.append($("<br />"));
         operations.append($("<br />"));
@@ -162,42 +170,51 @@ $(function () {
             "placeholder": "34567.6  ,  567.3",
             "class":"form-control"
         }));
-        operations.append($("<button />", {"id": "addPoints", "text": "Add", "value": "Add","class":"btn btn-default"}));
+        operations.append($("<button />", {"id": "addPoints", "text": "Add", "value": "Add","class":"btn btn-success"}));
 
     }
     fillOptions();
 
     function updateServerParameters() {
-        var paramObject = {};
-        $("#parameters").children("input").each(function (index) {
-            paramObject[$(this).attr("class")] = $(this).val();
+
+        $(".modal-body").find("input").each(function (index) {
+            paramObject[$(this).attr("id")] = $(this).val();
+            console.log($(this).attr("id"));
         });
+        //console.log(paramObject.defptcolor);
+        paramObject.defptcolorR = parseInt(paramObject.defptcolor.substr(0,2),16);
+        paramObject.defptcolorB = parseInt(paramObject.defptcolor.substr(2,4),16);
+        paramObject.defptcolorG = parseInt(paramObject.defptcolor.substr(4,6),16);
+
+        paramObject.defclstrcolorR = parseInt(paramObject.defclstrcolor.substr(0,2),16);
+        paramObject.defclstrcolorB = parseInt(paramObject.defclstrcolor.substr(2,4),16);
+        paramObject.defclstrcolorG = parseInt(paramObject.defclstrcolor.substr(4,6),16);
+
+
         socket.emit('updateParameters', paramObject);
     }
 
     socket.on('parameters', function (msg) {
-        var mousePos = $('#mousePos');
-        mousePos.append($("<p />", {"id": "mouseLocX"}));
-        mousePos.append($("<p />", {"id": "mouseLocY"}));
+        console.log("got parameters"+JSON.stringify(msg));
+        $(".modal-body").find("input").each(function (index) {
+            paramObject[$(this).attr("id")] = msg[$(this).attr("id")];
+        });
 
-        var params = $('#parameters');
-        if (params.children().length) {
-            for (var prop in msg) {
-                params.find("input." + prop).eq(0).attr("text", msg[prop]);
-            }
-        } else {
-            for (var prop in msg) {
-                params.append($("<p />", {"class": prop, "text": prop}));
-                params.append($("<input />", {"class": prop, "type": "text", "value": msg[prop]}));
-                params.append($("<br />"));
-            }
-            params.append($("<button />", {
-                "id": "updateParamButton",
-                "text": "Update Parameter",
-                "value": "Update Parameter"
-            }));
-            $("#updateParamButton").on("click", updateServerParameters);
-        }
+        paramObject.defptcolorR = parseInt(paramObject.defptcolor.substr(0,2),16);
+        paramObject.defptcolorB = parseInt(paramObject.defptcolor.substr(2,4),16);
+        paramObject.defptcolorG = parseInt(paramObject.defptcolor.substr(4,6),16);
+
+        paramObject.defclstrcolorR = parseInt(paramObject.defclstrcolor.substr(0,2),16);
+        paramObject.defclstrcolorB = parseInt(paramObject.defclstrcolor.substr(2,4),16);
+        paramObject.defclstrcolorG = parseInt(paramObject.defclstrcolor.substr(4,6),16);
+
+        document.getElementById('defptcolor').color.fromString(msg['defptcolor']);
+        document.getElementById('defclstrcolor').color.fromString(msg['defclstrcolor']);
+        $('#thptden').attr("placeholder",msg['thptden']);
+        $('#maxcluspl').attr("placeholder",msg['maxcluspl']);
+
+        $("#updateParamButton").on("click", updateServerParameters);
+
     });
     socket.emit('getParameters');
 
@@ -236,13 +253,14 @@ $(function () {
 
 
     socket.on('InitData', function (msg) {
+        data=[];
         data[1] = msg.data;
         coordRanges = msg.coordRanges;
         //getDataFromServer();
     });
 
     socket.on('newData', function (msg) {
-        console.log("Recieved new data from server : " + JSON.stringify(msg));
+        //console.log("Recieved new data from server : " + JSON.stringify(msg));
         serverVersion = msg.version;
         updateData(msg);
     });
@@ -252,7 +270,6 @@ $(function () {
         data[updateObj.level]= updateObj.data;
         state.levelsOnClient.push(updateObj.level);
     };
-
 
     function viz(processing) {
 
@@ -324,9 +341,7 @@ $(function () {
 
             for (var i = 1; i < data.length && i<= state.zoom ; i++) {
                 for(var j =0;data[i] && j<data[i].length ;j++) {
-                    //coorX = allData[state.zoom][i].x + margin + state.xDisp;
-                    //coorY = allData[state.zoom][i].y + margin + state.yDisp;
-                    //console.log(state.zoom);
+
                     coorX = data[i][j].x * state.zoom   + margin + state.xDisp;
                     coorY = data[i][j].y * state.zoom  + margin + state.yDisp;
 
@@ -345,7 +360,9 @@ $(function () {
                                     processing.fill(specialColors[i][j][0], specialColors[i][j][1],
                                         specialColors[i][j][2], alpha);
                                 } else {
-                                    processing.fill(250, 0, 0, alpha);
+
+                                    processing.fill(paramObject.defptcolorR,paramObject.defptcolorB,paramObject.defptcolorG , alpha);
+
                                     //if(i==2)
                                     //    processing.fill(0, 250, 0, alpha);
                                 }
@@ -361,7 +378,7 @@ $(function () {
                                     processing.fill(specialColors[i][j][0], specialColors[i][j][1],
                                         specialColors[i][j][2], alpha + 50 - alpha * (state.zoom - i) / 2);
                                 } else {
-                                    processing.fill(200, 0, 0, alpha + 50 - alpha * (state.zoom - i) / 2);
+                                    processing.fill(paramObject.defclstrcolorR,paramObject.defclstrcolorB,paramObject.defclstrcolorG , alpha + 50 - alpha * (state.zoom - i) / 2);
                                     //if(i==2)
                                     //  processing.fill(0, 250, 0, alpha);
 
@@ -399,15 +416,12 @@ $(function () {
 
         };
     }
-
     var canvas1 = document.getElementById("canvas1");
     var processingInstance1 = new Processing(canvas1, viz);
 
 
-
     function windowToCanvas(canvas, x, y) {
         var bbox = canvas.getBoundingClientRect();
-
         return {
             x: x - bbox.left * (canvas.width / bbox.width),
             y: y - bbox.top * (canvas.height / bbox.height)
@@ -529,17 +543,6 @@ $(function () {
         }
     };
 
-    /*$('#recolorPoints').click(function(){
-        clientVersion +=1;
-        console.log($('#newColor').get().rgb);
-        /*for (var i = 0; i < data.length; i++) {
-            if(selectedData[i]){
-                specialColors[i] = #('#newColor')
-            }
-        }
-
-    })*/
-
     $('#cancelSelection').click(function(){
         selectedData = setEmpty();
     })
@@ -613,28 +616,25 @@ $(function () {
 
     });
 
-    /*
-    canvas1.onmousewheel = function(e) {
-       // if(space) {
-            e.preventDefault();
-            var loc = windowToCanvas(canvas1, e.clientX, e.clientY);
-            if (e.wheelDelta > 0) {
-                zoomIn(loc.x, loc.y, 1);
-            } else {
-                zoomOut(loc.x, loc.y, 1);
-            }
-       // }
-    }
+    $(document).keypress(function(evt) {
 
-*/
-
-    $(document).keyup(function(evt) {
-        if (evt.keyCode == 32) {
-            space = false;
+        if(evt.keyCode == 68 || evt.keyCode ==100){
+            zoomOut(presentX, presentY, 1);
         }
-    }).keydown(function(evt) {
-        if (evt.keyCode == 32) {
-            space = true;
+        if(evt.keyCode == 69|| evt.keyCode == 101 ){
+            zoomIn(presentX, presentY, 1);
+        }
+        if(evt.keyCode == 65 || evt.keyCode == 97 ){
+            state.xDisp += getXDisplacement(10);
+        }
+        if(evt.keyCode == 83|| evt.keyCode ==115 ){
+            state.xDisp += getXDisplacement(-10);
+        }
+        if(evt.keyCode ==87  || evt.keyCode ==119 ){
+            state.yDisp += getYDisplacement(10);
+        }
+        if(evt.keyCode ==90 || evt.keyCode ==122 ){
+            state.yDisp += getYDisplacement(-10);
         }
     });
 
@@ -666,181 +666,9 @@ $(function () {
 
     function updateReadout(x, y) {
         $('#mouseLocX').text(x);
-        $('#mouseLocY').text(panOrSelect);
+        presentX = x;
+        $('#mouseLocY').text(y);
+        presentY = y;
     }
 
-
-    function netD(processing) {
-
-        //Use this line in production. It does not take the port
-        var image1Addr = 'http://' + window.location.host + '/images/902kb.jpg';
-        var size1 = 902;
-
-        var networkSpeedData1 = [];
-        var networkSpeedData2 = [];
-        var counter = 0;
-        var width = 1300;
-        var height = 500;
-
-        processing.setup = function () {
-            processing.size(width, height);
-            processing.background('#A5E4E8');
-            processing.frameRate(1);
-
-
-        }
-
-
-        processing.draw = function () {
-
-            var startTime, endTime, speedInKB;
-            var startTime1, endTime1, speedInKB1;
-
-            function getResults(startTime, endTime, networkSpeedData) {
-                var duration = (endTime - startTime) / 1000;
-                speedInKB = (size1 / duration).toFixed(2);
-                networkSpeedData.push(speedInKB);
-            }
-
-
-            //frameRate cannot be set to less than 1, using this if loop to update only every 5 seconds
-            if (counter == 0) {
-
-
-                function redrawNetGraph() {
-                    //draw the grid
-
-                    var margin = 60; // using this variable both for margin and step size
-
-                    processing.strokeWeight(1);
-                    processing.stroke(20, 20, 20);
-                    processing.background(230, 230, 230);
-                    processing.line(margin, height - margin, margin, margin); //vertical line
-                    processing.line(margin, height - margin, width - margin, height - margin); //horizontal line
-                    processing.fill(0);
-                    //updateGraph
-                    var min = Math.min.apply(null, networkSpeedData1),
-                        max = Math.max.apply(null, networkSpeedData1);
-                    var rangeFactor = (max - min) / margin;
-                    var numHorizontalTicks = Math.round((width - margin - 1) / margin);
-
-                    //processing.pushMatrix();
-                    //processing.translate(10, 30);
-                    //processing.rotate(Processing.PI/2.0);
-                    processing.text("(MBps)", 10, 50);
-                    //processing.popMatrix();
-
-                    for (var i = margin; i < height - margin; i += margin) {
-                        processing.line(margin - 4, height - i, margin + 4, height - i); //vertical tick marks
-
-                        processing.text(Math.round(((i + 2 * margin) * rangeFactor + min) / 1000), margin - 30, height - i);
-                    }
-
-                    for (var i = margin; i < width - margin - 1; i += margin) {
-                        processing.line(margin + i, height - margin - 4, margin + i, height - margin + 4); //horizontal tick marks
-
-                        processing.text(i / margin + 1 - networkSpeedData1.length, margin + i, height - margin + 30);
-
-                    }
-
-
-                    processing.stroke(230, 0, 0);
-
-
-                    for (var i = 1; i < networkSpeedData1.length; i++) {
-                        processing.line(margin + (i - 1) * margin, height - 2 * margin - (networkSpeedData1[i - 1] - min) / rangeFactor,
-                            margin + i * margin, height - 2 * margin - (networkSpeedData1[i] - min) / rangeFactor);  //Network speed graph
-                    }
-                    //console.log("net speed array: " +networkSpeedData1);
-
-                    /**
-                     processing.stroke(0, 230, 0);
-
-                     for (var i = 1; i < networkSpeedData2.length; i++) {
-                        processing.line( margin + (i - 1)*margin ,  height-2*margin- (networkSpeedData2[i - 1]- min)/rangeFactor,
-                            margin + i*margin, height - 2* margin -(networkSpeedData2[i]- min)/rangeFactor);  //Network speed graph
-                    }
-                     console.log("net speed array: " +networkSpeedData2); **/
-
-                }
-
-
-                //Normal image loading
-                var image1 = new Image();
-                image1.onload = function () {
-                    endTime = (new Date()).getTime();
-                    getResults(startTime, endTime, networkSpeedData1);
-                    redrawNetGraph();
-                }
-
-                startTime = (new Date()).getTime();
-                var cacheBuster = "?nnn=" + startTime;
-                image1.src = image1Addr + cacheBuster;
-
-                /**
-                 //Image loading using WebSockets
-                 startTime1 =  (new Date()).getTime();
-                 io.emit('getNetDImage');
-                 io.on('NetDImage',function(frame){
-                    console.log(frame);
-                    var src = blobToImage(frame.image);
-                    if (!src) return;
-
-                    var img = new Image();
-                    img.src = src;
-                    img.onload = function(){
-                    endTime1 =  (new Date()).getTime();
-                    getResults(startTime1,endTime1,networkSpeedData2);
-                    redrawNetGraph();
-                }}); **/
-
-
-            }
-
-            counter = (++counter) % 10;
-
-
-        };
-    }
-
-   // var networkData = document.getElementById("networkData");
-   // var processingInstance2 = new Processing(networkData, netD);
-
-    /*
-     function dataOnClient(processing){
-
-     processing.setup = function(){
-
-     }
-
-
-     processing.draw = function(){
-
-
-
-     };
-     }
-
-     var dataOnClient = document.getElementById("dataOnClient");
-     var processingInstance3= new Processing(dataOnClient,dataOnClient );
-
-
-     function processorUsed(processing){
-
-     processing.setup = function(){
-
-     }
-
-
-     processing.draw = function(){
-
-
-
-     };
-     }
-
-     var processorUsed = document.getElementById("processorUsed");
-     var processingInstance4 = new Processing(processorUsed,processorUsed );
-     */
 });
-

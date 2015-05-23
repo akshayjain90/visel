@@ -188,11 +188,22 @@ io.on('connection', function (socket) {
     })
 
     function sendParameters() {
-        return props;
+        var para = {'defptcolor': props.pointColor,
+            'defclstrcolor':props.clusterColor,
+            'thptden':props.clusteringNumOfPointsThreshold,
+            'maxcluspl': props.maxCentroidsPerView};
+        return para;
     };
 
     socket.on('updateParameters', function (msg) {
-        props = msg;
+        console.log("Got parameters to update"+ JSON.stringify(msg));
+        props.pointColor = msg.defptcolor;
+        props.clusterColor = msg.defclstrcolor;
+        if(msg.thptden != "")
+            props.clusteringNumOfPointsThreshold = parseInt(msg.thptden);
+        if(msg.maxcluspl != "")
+            props.maxCentroidsPerView = parseInt(msg.maxcluspl);
+
         sendPresentView();
     });
 
